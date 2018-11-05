@@ -22,12 +22,17 @@ DistanceOptimizer is for such scenarios, when we need to hit google api multiple
 DistanceOptimizer save the distances to your database and then fetch the address from database, it only hits google when it does not found the location in database.
 It results in high response time and also avoid rate_limit issues.
 ### Prerequisites
-Install MongoDB.
+MongoDB.
+
 Google api key(s).
+
 Log4j file (Optional).
 
-### Example
+### Input File
 
+[Sample address file](src/main/resources/sample_coordinates.txt)
+
+### Example 1
 ```
  private void workFlow() throws IOException, DistanceOptimizerException {
         DistanceOptimizerConfigurationDto distanceOptimizerConfiguration = new DistanceOptimizerConfigurationDto();
@@ -40,7 +45,7 @@ Log4j file (Optional).
         DistanceOptimizerService distanceOptimizer = DistanceOptimizerLoaderService.initializeInstance(distanceOptimizerConfiguration);
 
 
-        //  fetchAddressesFromInputFileAndSaveInDatabase 
+        // fetchAddressesFromInputFileAndSaveInDatabase
         distanceOptimizer.generate("full_path_to_address_file");
         //  fetchDistanceFromGoogleAndSaveInDatabase 
         distanceOptimizer.saveLocal();
@@ -60,7 +65,7 @@ Log4j file (Optional).
  
 
 ```
-
+### Example 2
 ```
 
     // With this function we can create a client application which will fetch the location pairs from your provided api and then 
