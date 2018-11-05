@@ -1,8 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Encoding" useUTFGuessing="true" native2AsciiForPropertiesFiles="false">
-    <file url="file://$PROJECT_DIR$/src/main/java/utils/DateUtils.java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/main/java/utils/HttpResponseProcessing.java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/main/java/utils/WebServiceUtils.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/distance/optimizer/model/entity/BaseEntity.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/distance/optimizer/model/entity/Distance.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/distance/optimizer/model/entity/DistanceInfo.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/distance/optimizer/model/entity/Location.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/distance/optimizer/model/entity/LocationPair.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/distance/optimizer/model/entity/LocationString.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/distance/optimizer/model/repository/DistanceCustomRepository.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/distance/optimizer/model/repository/DistanceRepository.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/distance/optimizer/model/repository/DistanceRepositoryImpl.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/distance/optimizer/model/repository/LocationPairRepository.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/distance/optimizer/model/repository/LocationStringRepository.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/distance/optimizer/utils/DateUtils.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/distance/optimizer/utils/HttpResponseProcessing.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/distance/optimizer/utils/WebServiceUtils.java" charset="UTF-8" />
   </component>
 </project>
