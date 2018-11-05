@@ -5,7 +5,9 @@ This project fetches the distances from google and save it into database.
 ## Getting Started
 
 Consider following locations:
+
 A,B,C and D.
+
 Suppose we are at location A.
 We have to go to location B and location C.
 We also want to go to location D. 
