@@ -34,4 +34,26 @@ public class DateUtils {
     	return cal.getTime();
     }
 
+    public static String getDayOfWeek (Date date) {
+        if (EntityHelper.isNull(date))
+            return null;
+
+        switch (date.getDay()) {
+            case 1:
+                return "M";
+            case 2:
+                return "T";
+            case 3:
+                return "W";
+            case 4:
+                return "TH";
+            case 5:
+                return "F";
+            case 6:
+                return "S";
+            default:
+                return "SU";
+        }
+    }
+
 }

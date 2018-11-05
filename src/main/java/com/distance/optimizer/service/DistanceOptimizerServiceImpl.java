@@ -42,23 +42,8 @@ public class DistanceOptimizerServiceImpl implements DistanceOptimizerService {
     }
 
     @Override
-    public void saveRemote() {
-        distanceService.executeRemote();
-    }
-
-    @Override
     public Distance getDistance(String srcLoc, String destLoc, Date departureTime, String trafficModel, Double fraction) throws DistanceOptimizerException {
         return distanceService.getDistance(srcLoc,destLoc,departureTime,trafficModel,fraction);
-    }
-
-    @Override
-    public String getFetchStrategy() {
-        return distanceService.getFetchStrategy();
-    }
-
-    @Override
-    public void setFetchStrategy(String fetchStrategy) {
-        distanceService.setFetchStrategy(fetchStrategy);
     }
 
     @Override

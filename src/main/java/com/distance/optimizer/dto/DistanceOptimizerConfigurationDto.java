@@ -18,6 +18,7 @@ public class DistanceOptimizerConfigurationDto implements Serializable{
     private Integer port;
     private String databaseName;
     private String schedulerCronExpression;
+    private String fetchStrategy = "best_guess";
 
     /**
      * It is for the purpose that if we only need to save location in database.
@@ -129,4 +130,11 @@ public class DistanceOptimizerConfigurationDto implements Serializable{
         this.schedulerCronExpression = schedulerCronExpression;
     }
 
+    public String getFetchStrategy() {
+        return fetchStrategy;
+    }
+
+    public void setFetchStrategy(String fetchStrategy) {
+        this.fetchStrategy = fetchStrategy;
+    }
 }

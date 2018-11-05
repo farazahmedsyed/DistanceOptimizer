@@ -2,7 +2,6 @@ package com.distance.optimizer.service;
 
 import com.distance.optimizer.dto.DistanceOptimizerConfigurationDto;
 import com.distance.optimizer.dto.DataCollectionDto;
-import com.distance.optimizer.dto.DistanceInfoDto;
 import com.distance.optimizer.dto.LocationPairDto;
 import com.distance.optimizer.dto.reponse.google.DistanceMatrixResponse;
 import com.distance.optimizer.model.entity.*;
@@ -10,23 +9,15 @@ import com.distance.optimizer.model.repository.DistanceRepository;
 import com.distance.optimizer.model.repository.LocationPairRepository;
 import com.distance.optimizer.model.repository.LocationStringRepository;
 import com.distance.optimizer.utils.*;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
 import com.distance.optimizer.exception.DistanceOptimizerException;
 import org.apache.log4j.Logger;
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.type.TypeReference;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import com.distance.optimizer.dto.reponse.google.Element;
-import com.distance.optimizer.dto.reponse.google.Row;
-import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -42,7 +33,7 @@ public class DistanceService {
     private static final Logger LOGGER = Logger.getLogger(DistanceService.class);
     private static final String SPLITTER = ",";
     private static final String COLLECTION_STATUS= "OK";
-    private String fetchStrategy = "best_guess";
+
 
     @Autowired
     private LocationStringRepository locationStringRepository;
@@ -54,39 +45,6 @@ public class DistanceService {
     private DistanceOptimizerConfigurationDto distanceOptimizerConfigurationDto;
 
     /**
-     * @return google fetch strategy
-     * */
-    public String getFetchStrategy() {
-        return fetchStrategy;
-    }
-
-    /**
-     * @param fetchStrategy set google fetch strategy
-     * */
-    public void setFetchStrategy(String fetchStrategy) {
-        this.fetchStrategy = fetchStrategy;
-    }
-
-    /**
-     * Fetch location from com.distanceoptimizer.api and post distance to com.distanceoptimizer.api.
-     * */
-    public void executeRemote(){
-        LOGGER.info("Executing Data Collection remote.");
-        for(String googleApiKey : distanceOptimizerConfigurationDto.getGoogleApiKeys()) {
-            int i = 100;
-            while (i > 0) {
-                try {
-                    saveDataForDataCollectionRemote(processLocationPairs(getDataForDataCollectionRemote(), googleApiKey));
-                }
-                catch (Exception e) {
-                   LOGGER.error(e);
-                }
-                i--;
-            }
-        }
-    }
-
-    /**
      * Fetch location from database and save distance in database.
      * */
     public void executeLocal(){
@@ -95,7 +53,7 @@ public class DistanceService {
             int i = 1;
             while (i > 0) {
                 try {
-                    saveDataForDataCollectionLocal(processLocationPairs(getDataForDataCollectionLocal(), googleApiKey));
+                    saveDataForDataCollectionLocal(LocationProcessorService.processLocationPairs(distanceOptimizerConfigurationDto, getDataForDataCollectionLocal(), googleApiKey));
                 } catch (Exception e) {
                    LOGGER.error(e);
                 }
@@ -194,134 +152,6 @@ public class DistanceService {
     }
 
     /**
-     * @return unprocessed location pairs fetched from url
-     * @throws DistanceOptimizerException
-     * */
-    public List<LocationPairDto> getDataForDataCollectionRemote() throws DistanceOptimizerException {
-        LOGGER.info("Fetching Data Collection remote.");
-        ListMultimap<String, String> queryParams = ArrayListMultimap.create();
-        queryParams.put("apikey", distanceOptimizerConfigurationDto.getApiKey());
-        return WebServiceUtils.get(distanceOptimizerConfigurationDto.getDevURLGetLocations(), queryParams, null, new HttpResponseProcessing() {
-            @Override
-            public Object process(String responseString) throws DistanceOptimizerException, IOException {
-                ObjectMapper objectMapper = new ObjectMapper();
-                Response response = objectMapper.readValue(responseString, Response.class);
-                if (response.getResponseHeader().getIsError() == true) {
-                    throw new DistanceOptimizerException();
-                }
-
-                String temp = objectMapper.writeValueAsString(response.getResponseBody().get("response"));
-                List<LocationPairDto> pairs = objectMapper.readValue(temp, new TypeReference<List<LocationPairDto>>() {
-                });
-                return pairs;
-            }
-        });
-
-    }
-
-    /**
-     * post dataCollectionDtos to url
-     * @param dataCollectionDtos distances fetched for un processed locations.
-     * @throws IOException
-     * @throws DistanceOptimizerException
-     * */
-    public void saveDataForDataCollectionRemote(List<DataCollectionDto> dataCollectionDtos) throws IOException, DistanceOptimizerException {
-        LOGGER.info("posting processed location pairs distance to remote.");
-        ListMultimap<String, String> queryParams = ArrayListMultimap.create();
-        queryParams.put("apikey", distanceOptimizerConfigurationDto.getApiKey());
-        if (EntityHelper.isListPopulated(dataCollectionDtos)) {
-            ObjectMapper objectMapper = new ObjectMapper();
-            String request = objectMapper.writeValueAsString(dataCollectionDtos);
-            WebServiceUtils.post(distanceOptimizerConfigurationDto.getDevURLSaveData(), request, queryParams, null, new HttpResponseProcessing() {
-                @Override
-                public Object process(String responseString) throws DistanceOptimizerException, IOException {
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    return objectMapper.readValue(responseString, Response.class);
-                }
-            });
-        }
-    }
-
-    /**
-     * @return processed dataCollectionDtos to save remotely or local
-     * @throws DistanceOptimizerException
-     * @throws ParseException
-     * @throws InterruptedException
-     * */
-    private List<DataCollectionDto> processLocationPairs(List<LocationPairDto> locationPairDtos, String googleApiKey) throws DistanceOptimizerException, ParseException, InterruptedException {
-        LOGGER.info("Processing LocationPairs.");
-        List<DataCollectionDto> dtos = new ArrayList<>();
-        if (EntityHelper.isListNotPopulated(locationPairDtos)) {
-            throw new DistanceOptimizerException();
-        }
-        String srcParam = locationPairDtos.get(0).getSrcLocStr();
-        StringBuffer destParam = new StringBuffer();
-        List<String> destList = new ArrayList<>();
-        for (int j = 0; j < locationPairDtos.size(); j++) {
-            destList.add(locationPairDtos.get(j).getDestLocStr());
-            if (j == 0) {
-                destParam.append(locationPairDtos.get(j).getDestLocStr());
-            } else {
-                destParam.append("|" + locationPairDtos.get(j).getDestLocStr());
-            }
-        }
-
-        Date date = DateUtils.formatDate(distanceOptimizerConfigurationDto.getDateTime());
-
-        DistanceMatrixResponse distanceMatrixResponse = null;
-        try {
-            Thread.sleep(500);
-            GoogleService googleService = new GoogleService(googleApiKey);
-            distanceMatrixResponse = googleService.getDistanceMatrixResponse(srcParam, destParam.toString(), date.getTime() / 1000, fetchStrategy);
-        }
-        catch (DistanceOptimizerException e) {
-           LOGGER.error(e);
-            return dtos;
-        }
-
-        Row row = distanceMatrixResponse.getRows().get(0);
-
-        for (int j = 0; j < destList.size(); j++) {
-            try {
-                DataCollectionDto dto = new DataCollectionDto();
-
-                dto.setSrcLocString(srcParam);
-                dto.setDestLocString(destList.get(j));
-
-                DistanceInfoDto distanceInfo = new DistanceInfoDto();
-                distanceInfo.setText(row.getElements().get(j).getDistance().getText());
-                distanceInfo.setValue((int) row.getElements().get(j).getDistance().getValue());
-
-                DistanceInfoDto duration = new DistanceInfoDto();
-                duration.setText(row.getElements().get(j).getDuration().getText());
-                duration.setValue(row.getElements().get(j).getDuration().getValue());
-
-                DistanceInfoDto durationInTraffic = new DistanceInfoDto();
-                durationInTraffic.setText(row.getElements().get(j).getDurationInTraffic().getText());
-                durationInTraffic.setValue(row.getElements().get(j).getDurationInTraffic().getValue());
-
-                dto.setDistance(distanceInfo);
-                dto.setDuration(duration);
-                dto.setDurationInTraffic(durationInTraffic);
-                dto.setTrafficModel("B");
-                dto.setHour(date.getHours());
-                dto.setMinute(date.getMinutes());
-                dto.setDayOfWeek(getDayOfWeek(date));
-                dto.setStatus(row.getElements().get(j).getStatus());
-                dto.setErrorMessage(distanceMatrixResponse.getErrorMessage());
-
-                dtos.add(dto);
-            } catch (Exception e) {
-               LOGGER.error(e);
-            }
-        }
-
-        return dtos;
-
-    }
-
-
-    /**
      * Cron job to execute at fix delay
      * */
     public void updateDistanceCronJob(){
@@ -335,7 +165,7 @@ public class DistanceService {
                     Thread.sleep(500);
                     GoogleService googleService = new GoogleService(distanceOptimizerConfigurationDto.getGoogleApiKeys().get(0));
                     distanceMatrixResponse = googleService.getDistanceMatrixResponse(distance.getSrc().getLocation(),
-                            distance.getDest().getLocation(), DateUtils.addDay(date,15).getTime() /1000, fetchStrategy);
+                            distance.getDest().getLocation(), DateUtils.addDay(date,15).getTime() /1000, distanceOptimizerConfigurationDto.getFetchStrategy());
                     updateDistance(distance, distanceMatrixResponse, DateUtils.addDay(date,15));
                 } catch (DistanceOptimizerException e) {
                    LOGGER.error(e);
@@ -391,28 +221,6 @@ public class DistanceService {
         return distance;
     }
 
-    private static String getDayOfWeek (Date date) {
-        if (EntityHelper.isNull(date))
-            return null;
-
-        switch (date.getDay()) {
-            case 1:
-                return "M";
-            case 2:
-                return "T";
-            case 3:
-                return "W";
-            case 4:
-                return "TH";
-            case 5:
-                return "F";
-            case 6:
-                return "S";
-            default:
-                return "SU";
-        }
-    }
-
     private Boolean isValidLatLngString (String loc) {
         String[] arr = loc.split(",");
         if (arr.length == 2) {
@@ -458,7 +266,7 @@ public class DistanceService {
         distance.setDate(DateUtils.format(departureTime, DateUtils.DATE_FORMAT));
         distance.setHour(departureTime.getHours());
         distance.setMinute(departureTime.getMinutes());
-        distance.setDayOfWeek(getDayOfWeek(departureTime));
+        distance.setDayOfWeek(DateUtils.getDayOfWeek(departureTime));
         distance.setStatus(distanceMatrixResponse.getRows().get(0).getElements().get(0).getStatus());
         distance.setErrorMessage(distanceMatrixResponse.getErrorMessage());
         distance.setUpdatedAt(new Date());
@@ -507,7 +315,7 @@ public class DistanceService {
         distance.setDate(DateUtils.format(departureTime, DateUtils.DATE_FORMAT));
         distance.setHour(departureTime.getHours());
         distance.setMinute(departureTime.getMinutes());
-        distance.setDayOfWeek(getDayOfWeek(departureTime));
+        distance.setDayOfWeek(DateUtils.getDayOfWeek(departureTime));
         distance.setStatus(distanceMatrixResponse.getRows().get(0).getElements().get(0).getStatus());
         distance.setErrorMessage(distanceMatrixResponse.getErrorMessage());
 

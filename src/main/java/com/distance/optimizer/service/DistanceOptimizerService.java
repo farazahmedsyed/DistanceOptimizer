@@ -43,13 +43,6 @@ public interface DistanceOptimizerService {
     void saveLocal();
 
     /**
-     * It retrieved unprocessed location from the provided get com.distanceoptimizer.api, fetch the distance from google and post it on save com.distanceoptimizer.api.
-     *
-     * <p>If unable to fetch address for any specific location, then it will log the error and continue its execution.</p>
-     */
-    void saveRemote();
-
-    /**
      * @return Distance from database if not found then fetch it from google.
      * @throws DistanceOptimizerException if unable to retreive distance from google.
      *
@@ -60,16 +53,6 @@ public interface DistanceOptimizerService {
      * @param fraction Fraction
      * */
     Distance getDistance (String srcLoc, String destLoc, Date departureTime, String trafficModel, Double fraction) throws DistanceOptimizerException;
-
-    /**
-     * Get Google Fetch Strategy
-     * */
-    String getFetchStrategy();
-
-    /**
-     * Set google fetch strategy
-     * */
-    void setFetchStrategy(String fetchStrategy);
 
     /**
      * @return unprocessed location pairs fetched for api
