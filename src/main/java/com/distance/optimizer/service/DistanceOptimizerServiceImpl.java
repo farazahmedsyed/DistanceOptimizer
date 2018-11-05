@@ -42,8 +42,8 @@ public class DistanceOptimizerServiceImpl implements DistanceOptimizerService {
     }
 
     @Override
-    public Distance getDistance(String srcLoc, String destLoc, Date departureTime, String trafficModel, Double fraction) throws DistanceOptimizerException {
-        return distanceService.getDistance(srcLoc,destLoc,departureTime,trafficModel,fraction);
+    public Distance getDistance(String srcLoc, String destLoc, Date departureTime, Double fraction) throws DistanceOptimizerException {
+        return distanceService.getDistance(srcLoc,destLoc,departureTime,fraction);
     }
 
     @Override

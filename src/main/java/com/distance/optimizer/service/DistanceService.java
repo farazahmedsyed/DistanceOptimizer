@@ -68,10 +68,9 @@ public class DistanceService {
      * @param srcLoc source Location.
      * @param destLoc Destination Location.
      * @param departureTime DepartureTime
-     * @param trafficModel Traffic Model
      * @param fraction Fraction
      * */
-    public Distance getDistance (String srcLoc, String destLoc, Date departureTime, String trafficModel, Double fraction) throws DistanceOptimizerException {
+    public Distance getDistance (String srcLoc, String destLoc, Date departureTime, Double fraction) throws DistanceOptimizerException {
         if(EntityHelper.isListNotPopulated(distanceOptimizerConfigurationDto.getGoogleApiKeys())){
             throw new DistanceOptimizerException("Google api keys are required");
         }
@@ -87,7 +86,7 @@ public class DistanceService {
             }
 
             LOGGER.info("Not found in database. Fetching from google.");
-            DistanceMatrixResponse distanceMatrixResponse = googleService.getDistanceMatrixResponse(srcLoc, destLoc, (departureTime.getTime()/1000), trafficModel);
+            DistanceMatrixResponse distanceMatrixResponse = googleService.getDistanceMatrixResponse(srcLoc, destLoc, (departureTime.getTime()/1000), distanceOptimizerConfigurationDto.getFetchStrategy());
 
             distance = convertToDistance(distanceMatrixResponse, srcLoc, destLoc, departureTime);
 
@@ -100,7 +99,7 @@ public class DistanceService {
         }
         else {
             LOGGER.info("Fetching from google.");
-            DistanceMatrixResponse distanceMatrixResponse = googleService.getDistanceMatrixResponse(srcLoc, destLoc, (departureTime.getTime()/1000), trafficModel);
+            DistanceMatrixResponse distanceMatrixResponse = googleService.getDistanceMatrixResponse(srcLoc, destLoc, (departureTime.getTime()/1000), distanceOptimizerConfigurationDto.getFetchStrategy());
 
             Distance distance = convertToDistance(distanceMatrixResponse, srcLoc, destLoc, departureTime);
             addPercentageOfTravelDurationInGoogleResults(distance, fraction);

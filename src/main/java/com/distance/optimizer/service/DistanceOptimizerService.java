@@ -49,10 +49,9 @@ public interface DistanceOptimizerService {
      * @param srcLoc source Location.
      * @param destLoc Destination Location.
      * @param departureTime DepartureTime
-     * @param trafficModel Traffic Model
      * @param fraction Fraction
      * */
-    Distance getDistance (String srcLoc, String destLoc, Date departureTime, String trafficModel, Double fraction) throws DistanceOptimizerException;
+    Distance getDistance (String srcLoc, String destLoc, Date departureTime, Double fraction) throws DistanceOptimizerException;
 
     /**
      * @return unprocessed location pairs fetched for api
