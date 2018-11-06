@@ -20,7 +20,7 @@ import java.util.List;
 public class DistanceOptimizerServiceImpl implements DistanceOptimizerService {
 
     @Autowired
-    private LocationsGeneratorService locationsGeneratorService;
+    private LocationsService locationsService;
     @Autowired
     private PairGeneratorService pairGeneratorService;
     @Autowired
@@ -32,7 +32,7 @@ public class DistanceOptimizerServiceImpl implements DistanceOptimizerService {
             throw new DistanceOptimizerException("Source File is required");
         }
         List<String> coordinates = distanceService.getValidCoordinates(sourceFile);
-        locationsGeneratorService.generate(coordinates);
+        locationsService.saveToDatabase(coordinates);
         pairGeneratorService.generate(coordinates);
     }
 
@@ -54,5 +54,10 @@ public class DistanceOptimizerServiceImpl implements DistanceOptimizerService {
     @Override
     public void saveDataForDataCollectionRemoteApi(List<DataCollectionDto> dataCollectionDtos) throws IOException, DistanceOptimizerException {
         distanceService.saveDataForDataCollectionLocal(dataCollectionDtos);
+    }
+
+    @Override
+    public void generateLocationFile(String inputFilePath, String outputFilePath) throws IOException, DistanceOptimizerException {
+        locationsService.generate(inputFilePath,outputFilePath);
     }
 }

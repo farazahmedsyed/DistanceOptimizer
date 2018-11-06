@@ -21,7 +21,7 @@ import java.util.List;
  */
 public class LocationProcessorService {
 
-    private static final Logger LOGGER = Logger.getLogger(LocationsGeneratorService.class);
+    private static final Logger LOGGER = Logger.getLogger(LocationsService.class);
 
     /**
      * @return processed dataCollectionDtos to save remotely or local

@@ -66,4 +66,13 @@ public interface DistanceOptimizerService {
      * @throws DistanceOptimizerException
      * */
     void saveDataForDataCollectionRemoteApi(List<DataCollectionDto> dataCollectionDtos) throws IOException, DistanceOptimizerException;
+
+    /**
+     * saveToDatabase location file
+     * @param inputFilePath
+     * @param outputFilePath
+     * @throws IOException
+     * @throws DistanceOptimizerException
+     * */
+    void generateLocationFile(String inputFilePath, String outputFilePath) throws IOException, DistanceOptimizerException;
 }

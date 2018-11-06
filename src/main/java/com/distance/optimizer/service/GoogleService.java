@@ -8,6 +8,7 @@ import com.distance.optimizer.utils.WebServiceUtils;
 import org.apache.log4j.Logger;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,6 +20,7 @@ public class GoogleService {
     private static final Logger LOGGER = Logger.getLogger(GoogleService.class);
     private String googleApiKey;
     private String googleDistanceMatrixApiUrl = "https://maps.googleapis.com/maps/api/distancematrix/json";
+    private String googleGeocodeApiUrl = "https://maps.googleapis.com/maps/api/geocode/json";
 
     public GoogleService(String googleApiKey){
         this.googleApiKey = googleApiKey;
@@ -42,5 +44,30 @@ public class GoogleService {
             throw new DistanceOptimizerException(StatusCodes.FAILED_TO_GET_API_RESPONSE.getCode(), distanceMatrixResponse.getErrorMessage());
         }
         return distanceMatrixResponse;
+    }
+
+    /**
+     * @throws DistanceOptimizerException
+     * @param address
+     * @return location
+     * */
+    public String getLocationFromGeocodeResponse(String address) throws DistanceOptimizerException {
+
+        Map<String, String> getCodeQueryParams = new HashMap<>();
+        getCodeQueryParams.put("address", address);
+        getCodeQueryParams.put("key", googleApiKey);
+
+        Map<String, Object> distanceMatrixResponse = WebServiceUtils.get(googleGeocodeApiUrl, getCodeQueryParams, null, Map.class);
+        if (EntityHelper.isNull(distanceMatrixResponse) || !distanceMatrixResponse.get("status").equals("OK")) {
+            LOGGER.error("GOOGLE_API_RESPONSE = " + distanceMatrixResponse.toString());
+            throw new DistanceOptimizerException(StatusCodes.FAILED_TO_GET_API_RESPONSE.getCode());
+        }
+
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(((Map) ((Map) ((Map) ((List) distanceMatrixResponse.get("results")).get(0)).get("geometry")).get("location")).get("lat"));
+        stringBuilder.append(",");
+        stringBuilder.append(((Map) ((Map) ((Map) ((List) distanceMatrixResponse.get("results")).get(0)).get("geometry")).get("location")).get("lng"));
+        stringBuilder.append("\n");
+        return stringBuilder.toString();
     }
 }
