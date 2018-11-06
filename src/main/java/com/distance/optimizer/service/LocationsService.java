@@ -60,7 +60,7 @@ public class LocationsService {
 
         Integer size = distanceOptimizerConfigurationDto.getGoogleApiKeys().size();
         Integer index = 0;
-        GoogleService googleService; = new GoogleService(distanceOptimizerConfigurationDto.getGoogleApiKeys().get(0));
+        GoogleService googleService;
         StringBuilder stringBuilder = new StringBuilder();
         for (String address : addresses){
             googleService = new GoogleService(distanceOptimizerConfigurationDto.getGoogleApiKeys().get(index));
