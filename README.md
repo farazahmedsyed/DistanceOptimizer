@@ -4,23 +4,12 @@ This project fetches the distances from google and save it into database.
 
 ## Getting Started
 
-Consider following locations:
+Consider destinations A, B, C and D — in which B, C and D are connected to A directly while B and C can also lead to D and B is not directly connected to C. Thus, forming a rhombus structure. Let A be the Source and D being the destination. While standing at the source (A) if the destination is D, the possible routes would be AD, BD and CD. Looking at the situation, the simplest route would be the shortest route — AD. At it’s simplest, a traditional application would call Google API to compute the distances of each route and then to determine the better one (in the above case — AD), thereby, increasing the latency. Furthermore, the response time of the application will drastically increase with the increase in number of source and destinations and different paths between source and destination.
 
-A,B,C and D.
 
-Suppose we are at location A.
-We have to go to location B and location C.
-We also want to go to location D.
-Possible routes :  A->D, B->D or C->D
-Keeping it simple the best route would be the shortest route.
-So we need to find out the distance of all above routes.
-It will be a time consuming process we need to call google api each time.
-Hence, response time will increase with increase in number of source or destination locations.
+“Distance Optimizer” is thus an improved solution for the above scenario. When an application’s user (end-user) is going to be affected by the processing of multiple Google API request hits (to compute paths), the Distance Optimizer is a perfect solution to the problem.
+What Distance Optimizer does, is that, it saves the distances between a source and a destination to a connected database thus fetching the address from the database when required. But when does it hit the Google API? Well, it only hits Google API when a specific location is then not found in the database. Therefore, resulting in low response time (high performance) and thereby avoids “rate_limit” issues.
 
-DistanceOptimizer is for such scenarios, when we need to hit google api multiple times which will effect our end-users.
-
-DistanceOptimizer save the distances to your database and then fetch the address from database, it only hits google when it does not found the location in database.
-It results in high response time and also avoid rate_limit issues.
 ### Prerequisites
 MongoDB.
 
@@ -33,6 +22,12 @@ Log4j file (Optional).
 [Sample address file](src/main/resources/sample_address.txt)
 
 [Sample location file](src/main/resources/sample_coordinates.txt)  System can also generate this file from above address file
+
+#### [DistanceOptimizerConfigurationDto](src/main/java/com/distance/optimizer/dto/DistanceOptimizerConfigurationDto.java)
+
+#### [DistanceOptimizerService](src/main/java/com/distance/optimizer/service/DistanceOptimizerService.java)
+
+#### [DistanceOptimizerRemoteService](src/main/java/com/distance/optimizer/service/remote/DistanceOptimizerRemoteService.java)
 
 ### Example 1
 ```

@@ -58,83 +58,144 @@ public class DistanceOptimizerConfigurationDto implements Serializable{
         this.googleApiKeys = googleApiKeys;
     }
 
+    /**
+     * @param dateTime time at which distance is required
+     * */
     public void setDateTime(String dateTime) {
         this.dateTime = dateTime;
     }
 
+    /**
+     * @param apiKey Api key, created by developer for get and post api.
+     * */
     public void setApiKey(String apiKey) {
         this.apiKey = apiKey;
     }
 
+    /**
+     * @param devURLGetLocations url created by developer for get api.
+     * */
     public void setDevURLGetLocations(String devURLGetLocations) {
         this.devURLGetLocations = devURLGetLocations;
     }
 
+    /**
+     * @param devURLSaveData url created by developer for post api.
+     * */
     public void setDevURLSaveData(String devURLSaveData) {
         this.devURLSaveData = devURLSaveData;
     }
 
+    /**
+     * @param googleApiKeys with permissions to distance matrix and geo coding api.
+     * */
     public void setGoogleApiKeys(List<String> googleApiKeys) {
         this.googleApiKeys = googleApiKeys;
     }
 
-    public String getDateTime() {
-        return dateTime;
-    }
-
-    public String getApiKey() {
-        return apiKey;
-    }
-
-    public String getDevURLGetLocations() {
-        return devURLGetLocations;
-    }
-
-    public String getDevURLSaveData() {
-        return devURLSaveData;
-    }
-
-    public List<String> getGoogleApiKeys() {
-        return googleApiKeys;
-    }
-
-    public String getServerAddress() {
-        return serverAddress;
-    }
-
-    public void setServerAddress(String serverAddress) {
-        this.serverAddress = serverAddress;
-    }
-
-    public Integer getPort() {
-        return port;
-    }
-
+    /**
+     * @param port Required only if developer need to create spring data mongodb object.
+     * */
     public void setPort(Integer port) {
         this.port = port;
     }
 
-    public String getDatabaseName() {
-        return databaseName;
-    }
-
+    /**
+     * @param databaseName Required only if developer need to create spring data mongodb object.
+     * */
     public void setDatabaseName(String databaseName) {
         this.databaseName = databaseName;
     }
 
-    public String getSchedulerCronExpression() {
-        return schedulerCronExpression;
-    }
-
+    /**
+     * @param schedulerCronExpression if set then a cron job will execute to update the distances saved in database.
+     * */
     public void setSchedulerCronExpression(String schedulerCronExpression) {
         this.schedulerCronExpression = schedulerCronExpression;
     }
 
+    /**
+     * @param fetchStrategy default is best_guess though developer can update it.
+     * */
+    public void setFetchStrategy(String fetchStrategy) {
+        this.fetchStrategy = fetchStrategy;
+    }
+
+    /**
+     * Getter
+     * */
+    public String getDateTime() {
+        return dateTime;
+    }
+
+    /**
+     * Getter
+     * */
+    public String getApiKey() {
+        return apiKey;
+    }
+
+    /**
+     * Getter
+     * */
+    public String getDevURLGetLocations() {
+        return devURLGetLocations;
+    }
+
+    /**
+     * Getter
+     * */
+    public String getDevURLSaveData() {
+        return devURLSaveData;
+    }
+
+    /**
+     * Getter
+     * */
+    public List<String> getGoogleApiKeys() {
+        return googleApiKeys;
+    }
+
+    /**
+     * Getter
+     * */
+    public String getServerAddress() {
+        return serverAddress;
+    }
+
+    /**
+     * Getter
+     * */
+    public void setServerAddress(String serverAddress) {
+        this.serverAddress = serverAddress;
+    }
+
+    /**
+     * Getter
+     * */
+    public Integer getPort() {
+        return port;
+    }
+
+    /**
+     * Getter
+     * */
+    public String getDatabaseName() {
+        return databaseName;
+    }
+
+    /**
+     * Getter
+     * */
+    public String getSchedulerCronExpression() {
+        return schedulerCronExpression;
+    }
+
+    /**
+     * Getter
+     * */
     public String getFetchStrategy() {
         return fetchStrategy;
     }
 
-    public void setFetchStrategy(String fetchStrategy) {
-        this.fetchStrategy = fetchStrategy;
-    }
 }
