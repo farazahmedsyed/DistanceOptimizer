@@ -14,7 +14,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
  * <p>Creates required configuration beans.</p>
  * */
 @Configuration
-@ComponentScan({"com.distance.optimizer.service"})
+@ComponentScan({"com.distance.optimizer"})
 @EnableMongoRepositories(basePackages = "com.distance.optimizer.model.repository")
 @EnableScheduling
 public class DistanceOptimizerBeansConfig {

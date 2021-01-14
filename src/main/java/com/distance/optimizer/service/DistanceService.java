@@ -1,28 +1,27 @@
 package com.distance.optimizer.service;
 
 import com.distance.optimizer.dto.DataCollectionDto;
-import com.distance.optimizer.dto.DistanceOptimizerConfigurationDto;
-import com.distance.optimizer.dto.LocationPairDto;
+import com.distance.optimizer.dto.DisOptimizerDto;
 import com.distance.optimizer.dto.reponse.google.DistanceMatrixResponse;
 import com.distance.optimizer.dto.reponse.google.Element;
+import com.distance.optimizer.dto.request.google.DistanceMatrixRequestDto;
 import com.distance.optimizer.exception.DistanceOptimizerException;
-import com.distance.optimizer.model.entity.*;
+import com.distance.optimizer.model.entity.Distance;
+import com.distance.optimizer.model.entity.DistanceInfo;
+import com.distance.optimizer.model.entity.Location;
+import com.distance.optimizer.model.entity.LocationPair;
 import com.distance.optimizer.model.repository.DistanceRepository;
-import com.distance.optimizer.model.repository.LocationPairRepository;
-import com.distance.optimizer.model.repository.LocationStringRepository;
 import com.distance.optimizer.utils.DateUtils;
 import com.distance.optimizer.utils.EntityHelper;
+import com.distance.optimizer.utils.ValidationUtil;
 import org.apache.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Scanner;
 
 /**
  * @author FarazAhmed
@@ -37,36 +36,13 @@ public class DistanceService {
 
 
     @Autowired
-    private LocationStringRepository locationStringRepository;
-    @Autowired
-    private LocationPairRepository locationPairRepository;
+    private LocationsService locationsService;
     @Autowired
     private DistanceRepository distanceRepository;
     @Autowired
-    private DistanceOptimizerConfigurationDto distanceOptimizerConfigurationDto;
+    private DisOptimizerDto disOptimizerDto;
     @Autowired
-    private LocationProcessorService locationProcessorService;
-
-    /**
-     * Fetch location from database and save distance in database.
-     * */
-    public void executeLocal(){
-        LOGGER.info("Executing Data Collection local.");
-        for(String googleApiKey : distanceOptimizerConfigurationDto.getGoogleApiKeys()) {
-            int i = 1;
-            while (i > 0) {
-                try {
-                    List<LocationPairDto> locationPairDtos = getDataForDataCollectionLocal();
-                    List<DataCollectionDto> dataCollectionDtos = locationProcessorService
-                            .processLocationPairs(distanceOptimizerConfigurationDto, locationPairDtos, googleApiKey);
-                    saveDataForDataCollectionLocal(dataCollectionDtos);
-                } catch (Exception e) {
-                   LOGGER.error(e);
-                }
-                i--;
-            }
-        }
-    }
+    private GoogleService googleService;
 
     /**
      * @return  Distance from database if not found then from google and update database.
@@ -77,11 +53,18 @@ public class DistanceService {
      * @param fraction Fraction
      * */
     public Distance getDistance (String srcLoc, String destLoc, Date departureTime, Double fraction) throws DistanceOptimizerException {
-        if(EntityHelper.isListNotPopulated(distanceOptimizerConfigurationDto.getGoogleApiKeys())){
+        if(EntityHelper.isListNotPopulated(disOptimizerDto.getGoogleApiKeys())){
             throw new DistanceOptimizerException("Google api keys are required");
         }
-        GoogleService googleService = new GoogleService(distanceOptimizerConfigurationDto.getGoogleApiKeys().get(0));
-        if (isValidLatLngString(srcLoc) && isValidLatLngString(destLoc)) {
+        DistanceMatrixRequestDto matrixRequestDto = DistanceMatrixRequestDto
+                .builder()
+                .origins(srcLoc)
+                .destinations(destLoc)
+                .departureSeconds((departureTime.getTime() / 1000))
+                .trafficModel(disOptimizerDto.getFetchStrategy())
+                .googleApiKey(disOptimizerDto.getGoogleApiKeys().get(0))
+                .build();
+        if (ValidationUtil.isValidLatLngString(srcLoc) && ValidationUtil.isValidLatLngString(destLoc)) {
             Location src = new Location(Double.parseDouble(srcLoc.split(",")[1]), Double.parseDouble(srcLoc.split(",")[0]));
             Location dest = new Location(Double.parseDouble(destLoc.split(",")[1]), Double.parseDouble(destLoc.split(",")[0]));
 
@@ -92,7 +75,8 @@ public class DistanceService {
             }
 
             LOGGER.info("Not found in database. Fetching from google.");
-            DistanceMatrixResponse distanceMatrixResponse = googleService.getDistanceMatrixResponse(srcLoc, destLoc, (departureTime.getTime()/1000), distanceOptimizerConfigurationDto.getFetchStrategy());
+
+            DistanceMatrixResponse distanceMatrixResponse = googleService.getDistanceMatrixResponse(matrixRequestDto);
 
             distance = convertToDistance(distanceMatrixResponse, srcLoc, destLoc, departureTime);
 
@@ -105,34 +89,13 @@ public class DistanceService {
         }
         else {
             LOGGER.info("Fetching from google.");
-            DistanceMatrixResponse distanceMatrixResponse = googleService.getDistanceMatrixResponse(srcLoc, destLoc, (departureTime.getTime()/1000), distanceOptimizerConfigurationDto.getFetchStrategy());
+            DistanceMatrixResponse distanceMatrixResponse = googleService.getDistanceMatrixResponse(matrixRequestDto);
 
             Distance distance = convertToDistance(distanceMatrixResponse, srcLoc, destLoc, departureTime);
             addPercentageOfTravelDurationInGoogleResults(distance, fraction);
             return distance;
         }
 
-    }
-
-    /**
-     * @return unprocessed location pairs from database.
-     * */
-    public List<LocationPairDto> getDataForDataCollectionLocal() {
-        LOGGER.info("Fetching location pairs from local.");
-        List<LocationPair> locationPairs = new ArrayList<>();
-        LocationString locationString = locationStringRepository.findFirst1ByCompleted(Boolean.FALSE);
-        if (EntityHelper.isNotNull(locationString)) {
-            locationPairs = locationPairRepository.findFirst25BySrcLocStrAndSent(locationString.getLoc(), Boolean.FALSE);
-            if (EntityHelper.isListNotPopulated(locationPairs)) {
-                locationString.setCompleted(Boolean.TRUE);
-                locationStringRepository.save(locationString);
-            }
-            for (LocationPair locationPair : locationPairs) {
-                locationPair.setSent(Boolean.TRUE);
-                locationPairRepository.save(locationPair);
-            }
-        }
-        return LocationPair.convertToDto(locationPairs);
     }
 
     /**
@@ -146,11 +109,12 @@ public class DistanceService {
         }
         for (DataCollectionDto dto : dataCollectionDtos) {
             if (dto.getStatus().equals(COLLECTION_STATUS)) {
-                LocationPair locationPair = locationPairRepository.findFirst1BySrcLocStrAndDestLocStr(dto.getSrcLocString().trim(), dto.getDestLocString().trim());
-                if (EntityHelper.isNotNull(locationPair)) {
+                LocationPair locationPair = locationsService
+                        .findLocationPair(dto.getSrcLocString(), dto.getDestLocString());
+                if (locationPair != null) {
                     Distance distance = convertDataCollectionDtoToDistance(dto);
                     distanceRepository.save(distance);
-                    locationPairRepository.delete(locationPair);
+                    locationsService.deleteLocationPair(locationPair);
                 }
             }
         }
@@ -168,9 +132,15 @@ public class DistanceService {
                 DistanceMatrixResponse distanceMatrixResponse = null;
                 try {
                     Thread.sleep(500);
-                    GoogleService googleService = new GoogleService(distanceOptimizerConfigurationDto.getGoogleApiKeys().get(0));
-                    distanceMatrixResponse = googleService.getDistanceMatrixResponse(distance.getSrc().getLocation(),
-                            distance.getDest().getLocation(), DateUtils.addDay(date,15).getTime() /1000, distanceOptimizerConfigurationDto.getFetchStrategy());
+                    DistanceMatrixRequestDto matrixRequestDto = DistanceMatrixRequestDto
+                            .builder()
+                            .origins(distance.getSrc().getLocation())
+                            .destinations(distance.getDest().getLocation())
+                            .departureSeconds(DateUtils.addDay(date,15).getTime() /1000)
+                            .trafficModel(disOptimizerDto.getFetchStrategy())
+                            .googleApiKey(disOptimizerDto.getGoogleApiKeys().get(0))
+                            .build();
+                    distanceMatrixResponse = googleService.getDistanceMatrixResponse(matrixRequestDto);
                     updateDistance(distance, distanceMatrixResponse, DateUtils.addDay(date,15));
                 } catch (DistanceOptimizerException e) {
                    LOGGER.error(e);
@@ -182,23 +152,6 @@ public class DistanceService {
         catch (Exception e){
            LOGGER.error(e);
         }
-    }
-
-    /**
-     * @return List of valid cooordinates.
-     * @throws FileNotFoundException if file not found.
-     * */
-    public List<String> getValidCoordinates(String sourceFile) throws FileNotFoundException {
-        List<String> coordinates = new ArrayList<>();
-        Scanner reader = new Scanner(new FileReader(sourceFile));
-        while (reader.hasNextLine()) {
-            String loc = reader.nextLine();
-            if (isValidLatLngString(loc)) {
-                coordinates.add(loc);
-            }
-        }
-        reader.close();
-        return coordinates;
     }
 
     private Distance convertDataCollectionDtoToDistance(DataCollectionDto dataCollectionDto) {
@@ -224,28 +177,6 @@ public class DistanceService {
         distance.setDurationInTraffic(durationInTraffic);
         distance.setUpdatedAt(new Date());
         return distance;
-    }
-
-    private Boolean isValidLatLngString (String loc) {
-        String[] arr = loc.split(",");
-        if (arr.length == 2) {
-            if (isDoubleAndValidLocation(arr[0]) && isDoubleAndValidLocation(arr[1])) {
-                return Boolean.TRUE;
-            }
-        }
-        return Boolean.FALSE;
-    }
-
-    private boolean isDoubleAndValidLocation(String str) {
-        try {
-            Double parseDouble = Double.parseDouble(str);
-            /*if (parseDouble > 108 || parseDouble < 180){
-                return false;
-            }*/
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
     }
 
     private void updateDistance(Distance distance, DistanceMatrixResponse distanceMatrixResponse, Date departureTime){
@@ -284,14 +215,14 @@ public class DistanceService {
         Element element = distanceMatrixResponse.getRows().get(0).getElements().get(0);
 
         Location srcLoc = null;
-        if (isValidLatLngString(src)) {
+        if (ValidationUtil.isValidLatLngString(src)) {
             srcLoc = new Location();
             srcLoc.setLng(Double.parseDouble(src.split(",")[1]));
             srcLoc.setLat(Double.parseDouble(src.split(",")[0]));
         }
 
         Location destLoc = null;
-        if (isValidLatLngString(dest)) {
+        if (ValidationUtil.isValidLatLngString(dest)) {
             destLoc = new Location();
             destLoc.setLng(Double.parseDouble(dest.split(",")[1]));
             destLoc.setLat(Double.parseDouble(dest.split(",")[0]));
