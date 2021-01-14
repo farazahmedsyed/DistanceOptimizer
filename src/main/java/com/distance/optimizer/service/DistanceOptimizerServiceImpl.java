@@ -2,15 +2,18 @@ package com.distance.optimizer.service;
 
 import com.distance.optimizer.dto.DataCollectionDto;
 import com.distance.optimizer.dto.LocationPairDto;
-import com.distance.optimizer.model.entity.Distance;
 import com.distance.optimizer.exception.DistanceOptimizerException;
+import com.distance.optimizer.model.entity.Distance;
+import com.distance.optimizer.model.entity.LocationString;
+import com.distance.optimizer.utils.EntityHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import com.distance.optimizer.utils.EntityHelper;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author FarazAhmed
@@ -25,6 +28,17 @@ public class DistanceOptimizerServiceImpl implements DistanceOptimizerService {
     private PairGeneratorService pairGeneratorService;
     @Autowired
     private DistanceService distanceService;
+
+    @Override
+    public void createLocPairsWithLocStrings(List<String> addresses){
+        Objects.requireNonNull(addresses);
+        List<LocationString> locationStrings = locationsService.getAll();
+        for (String destAddress : addresses){
+            for (LocationString locationString : locationStrings){
+                pairGeneratorService.save(locationString.getLoc(), destAddress);
+            }
+        }
+    }
 
     @Override
     public void generate(String sourceFile) throws FileNotFoundException, DistanceOptimizerException {

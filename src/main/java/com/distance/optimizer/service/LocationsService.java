@@ -28,6 +28,10 @@ public class LocationsService {
     @Autowired
     private DistanceOptimizerConfigurationDto distanceOptimizerConfigurationDto;
 
+    public List<LocationString> getAll(){
+        return locationStringRepository.findAll();
+    }
+
     /**
      * @param coordinates valid coordinates from input file.
      * */

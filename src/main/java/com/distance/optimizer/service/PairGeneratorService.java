@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author FarazAhmed
@@ -24,19 +25,28 @@ public class PairGeneratorService {
     public void generate(List<String> coordinates){
         LOGGER.info("Generating locationPairs.");
         List<LocationPair> locationPairs = locationPairRepository.findBySrcLocStrInAndDestLocStrIn(coordinates, coordinates);
-        for (String source : coordinates) {
-            for (String destination : coordinates) {
+        int size = coordinates.size();
+        for (int i=0; i<size;i++){
+            String source = coordinates.get(i);
+            for (int j=i+1;j<size;j++){
+                String destination = coordinates.get(j);
                 if (!source.trim().equalsIgnoreCase(destination.trim())) {
                     if (!locationPairs.parallelStream().filter(l -> l.getSrcLocStr().equals(source) && l.getDestLocStr().equals(destination)).findFirst().isPresent()) {
-                        LocationPair locationPair = new LocationPair();
-                        locationPair.setDestLocStr(destination);
-                        locationPair.setSrcLocStr(source);
-                        locationPair.setSent(Boolean.FALSE);
-                        locationPairRepository.save(locationPair);
+                        save(source, destination);
                     }
                 }
             }
         }
 
+    }
+
+    public void save(String srcLoc, String destLoc){
+        Objects.requireNonNull(srcLoc);
+        Objects.requireNonNull(destLoc);
+        LocationPair locationPair = new LocationPair();
+        locationPair.setSrcLocStr(srcLoc);
+        locationPair.setDestLocStr(destLoc);
+        locationPair.setSent(Boolean.FALSE);
+        locationPairRepository.save(locationPair);
     }
 }

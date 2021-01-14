@@ -22,6 +22,8 @@ import java.util.List;
  */
 public interface DistanceOptimizerService {
 
+    void createLocPairsWithLocStrings(List<String> addresses);
+
     /**
      * Read the sourcefile for location in each line and save it to database.
      * <p>The data will grow as the number of addresses increases.</p>

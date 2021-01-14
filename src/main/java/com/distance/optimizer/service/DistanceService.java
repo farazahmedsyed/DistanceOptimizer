@@ -233,9 +233,9 @@ public class DistanceService {
     private boolean isDoubleAndValidLocation(String str) {
         try {
             Double parseDouble = Double.parseDouble(str);
-            if (parseDouble > 108 || parseDouble < 180){
+            /*if (parseDouble > 108 || parseDouble < 180){
                 return false;
-            }
+            }*/
             return true;
         } catch (NumberFormatException e) {
             return false;

@@ -60,6 +60,10 @@ public class GoogleService {
         Map<String, Object> distanceMatrixResponse = WebServiceUtils.get(googleGeocodeApiUrl, getCodeQueryParams, null, Map.class);
         if (EntityHelper.isNull(distanceMatrixResponse) || !distanceMatrixResponse.get("status").equals("OK")) {
             LOGGER.error("GOOGLE_API_RESPONSE = " + distanceMatrixResponse.toString());
+            Object status = distanceMatrixResponse.get("status");
+            if ("ZERO_RESULTS".equals(status)) {
+                return "";
+            }
             throw new DistanceOptimizerException(StatusCodes.FAILED_TO_GET_API_RESPONSE.getCode());
         }
 
