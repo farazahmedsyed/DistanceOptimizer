@@ -10,6 +10,7 @@ import com.distance.optimizer.exception.DistanceOptimizerException;
 import com.distance.optimizer.utils.DateUtils;
 import com.distance.optimizer.utils.EntityHelper;
 import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ import java.util.List;
 /**
  * @author FarazAhmed
  */
+@Component
 public class LocationProcessorService {
 
     private static final Logger LOGGER = Logger.getLogger(LocationsService.class);
@@ -29,7 +31,9 @@ public class LocationProcessorService {
      * @throws ParseException
      * @throws InterruptedException
      * */
-    public static List<DataCollectionDto> processLocationPairs(DistanceOptimizerConfigurationDto distanceOptimizerConfigurationDto, List<LocationPairDto> locationPairDtos, String googleApiKey) throws DistanceOptimizerException, ParseException, InterruptedException {
+    public List<DataCollectionDto> processLocationPairs(DistanceOptimizerConfigurationDto distanceOptimizerConfigurationDto,
+                                                        List<LocationPairDto> locationPairDtos,
+                                                        String googleApiKey) throws DistanceOptimizerException, ParseException, InterruptedException {
         LOGGER.info("Processing LocationPairs.");
         List<DataCollectionDto> dtos = new ArrayList<>();
         if (EntityHelper.isListNotPopulated(locationPairDtos)) {

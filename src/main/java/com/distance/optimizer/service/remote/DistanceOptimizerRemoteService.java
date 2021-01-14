@@ -17,6 +17,7 @@ import org.codehaus.jackson.type.TypeReference;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author FarazAhmed
@@ -26,9 +27,14 @@ public class DistanceOptimizerRemoteService {
     private static final Logger LOGGER = Logger.getLogger(DistanceOptimizerRemoteService.class);
 
     private DistanceOptimizerConfigurationDto distanceOptimizerConfigurationDto;
+    private LocationProcessorService locationProcessorService;
 
-    public DistanceOptimizerRemoteService(DistanceOptimizerConfigurationDto distanceOptimizerConfigurationDto) {
+    public DistanceOptimizerRemoteService(DistanceOptimizerConfigurationDto distanceOptimizerConfigurationDto,
+                                          LocationProcessorService locationProcessorService) {
+        Objects.requireNonNull(distanceOptimizerConfigurationDto);
+        Objects.requireNonNull(locationProcessorService);
         this.distanceOptimizerConfigurationDto = distanceOptimizerConfigurationDto;
+        this.locationProcessorService = locationProcessorService;
     }
 
     /**
@@ -36,15 +42,17 @@ public class DistanceOptimizerRemoteService {
      *
      * <p>If unable to fetch address for any specific location, then it will log the error and continue its execution.</p>
      */
-    public void executeRemote(){
+    public void executeRemote() {
         LOGGER.info("Executing Data Collection remote.");
-        for(String googleApiKey : distanceOptimizerConfigurationDto.getGoogleApiKeys()) {
+        for (String googleApiKey : distanceOptimizerConfigurationDto.getGoogleApiKeys()) {
             int i = 100;
             while (i > 0) {
                 try {
-                    saveDataForDataCollectionRemote(LocationProcessorService.processLocationPairs(distanceOptimizerConfigurationDto, getDataForDataCollectionRemote(), googleApiKey));
-                }
-                catch (Exception e) {
+                    List<LocationPairDto> locationPairDtos = getDataForDataCollectionRemote();
+                    List<DataCollectionDto> dataCollectionDtos = locationProcessorService
+                            .processLocationPairs(distanceOptimizerConfigurationDto, locationPairDtos, googleApiKey);
+                    saveDataForDataCollectionRemote(dataCollectionDtos);
+                } catch (Exception e) {
                     LOGGER.error(e);
                 }
                 i--;
@@ -54,10 +62,11 @@ public class DistanceOptimizerRemoteService {
 
     /**
      * post dataCollectionDtos to url
+     *
      * @param dataCollectionDtos distances fetched for un processed locations.
      * @throws IOException
      * @throws DistanceOptimizerException
-     * */
+     */
     public void saveDataForDataCollectionRemote(List<DataCollectionDto> dataCollectionDtos) throws IOException, DistanceOptimizerException {
         LOGGER.info("posting processed location pairs distance to remote.");
         ListMultimap<String, String> queryParams = ArrayListMultimap.create();
@@ -78,7 +87,7 @@ public class DistanceOptimizerRemoteService {
     /**
      * @return unprocessed location pairs fetched from url
      * @throws DistanceOptimizerException
-     * */
+     */
     public List<LocationPairDto> getDataForDataCollectionRemote() throws DistanceOptimizerException {
         LOGGER.info("Fetching Data Collection remote.");
         ListMultimap<String, String> queryParams = ArrayListMultimap.create();

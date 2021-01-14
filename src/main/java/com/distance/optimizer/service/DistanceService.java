@@ -1,20 +1,21 @@
 package com.distance.optimizer.service;
 
-import com.distance.optimizer.dto.DistanceOptimizerConfigurationDto;
 import com.distance.optimizer.dto.DataCollectionDto;
+import com.distance.optimizer.dto.DistanceOptimizerConfigurationDto;
 import com.distance.optimizer.dto.LocationPairDto;
 import com.distance.optimizer.dto.reponse.google.DistanceMatrixResponse;
+import com.distance.optimizer.dto.reponse.google.Element;
+import com.distance.optimizer.exception.DistanceOptimizerException;
 import com.distance.optimizer.model.entity.*;
 import com.distance.optimizer.model.repository.DistanceRepository;
 import com.distance.optimizer.model.repository.LocationPairRepository;
 import com.distance.optimizer.model.repository.LocationStringRepository;
-import com.distance.optimizer.utils.*;
-import com.distance.optimizer.exception.DistanceOptimizerException;
+import com.distance.optimizer.utils.DateUtils;
+import com.distance.optimizer.utils.EntityHelper;
 import org.apache.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import com.distance.optimizer.dto.reponse.google.Element;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -43,6 +44,8 @@ public class DistanceService {
     private DistanceRepository distanceRepository;
     @Autowired
     private DistanceOptimizerConfigurationDto distanceOptimizerConfigurationDto;
+    @Autowired
+    private LocationProcessorService locationProcessorService;
 
     /**
      * Fetch location from database and save distance in database.
@@ -53,7 +56,10 @@ public class DistanceService {
             int i = 1;
             while (i > 0) {
                 try {
-                    saveDataForDataCollectionLocal(LocationProcessorService.processLocationPairs(distanceOptimizerConfigurationDto, getDataForDataCollectionLocal(), googleApiKey));
+                    List<LocationPairDto> locationPairDtos = getDataForDataCollectionLocal();
+                    List<DataCollectionDto> dataCollectionDtos = locationProcessorService
+                            .processLocationPairs(distanceOptimizerConfigurationDto, locationPairDtos, googleApiKey);
+                    saveDataForDataCollectionLocal(dataCollectionDtos);
                 } catch (Exception e) {
                    LOGGER.error(e);
                 }
