@@ -16,8 +16,30 @@
     </properties>
 
 
+    <distributionManagement>
+        <repository>
+            <id>DistanceOptimizer</id>
+            <name>DistanceOptimizer</name>
+            <url>git@github.com:farazahmedsyed/DistanceOptimizer.git</url>
+            <!--<url>git:master://git@bitbucket.org:myCompany/meta/mavenrepo.git</url> This is an Example-->
+        </repository>
+    </distributionManagement>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>synergian-repo</id>
+            <url>git:releases://git@github.com:synergian/wagon-git.git</url>
+        </pluginRepository>
+    </pluginRepositories>
     <build>
         <finalName>DistanceOptimizer</finalName>
+        <extensions>
+            <extension>
+                <groupId>ar.com.synergian</groupId>
+                <artifactId>wagon-git</artifactId>
+                <version>0.2.5</version>
+            </extension>
+        </extensions>
         <plugins>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
